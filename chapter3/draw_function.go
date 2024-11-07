@@ -14,8 +14,8 @@ func drawFunction(start, stop, step float64, f func(x float64) float64, outputFi
 	y := common.ApplyFunction(x, f)
 
 	plot := plot.New()
-	plot.X.Min = -1.0 * (start + 1.0)
-	plot.X.Max = (stop + 1.0)
+	plot.X.Min = start - 1.0
+	plot.X.Max = stop + 1.0
 
 	col, _ := x.Dims()
 	points := make(plotter.XYs, col)
@@ -23,12 +23,14 @@ func drawFunction(start, stop, step float64, f func(x float64) float64, outputFi
 		points[idx].X = x.At(idx, 0)
 		points[idx].Y = y.At(idx, 0)
 	}
+
 	line, err := plotter.NewLine(points)
 	if err != nil {
 		panic(err)
 	}
 	plot.Add(line)
 
+	plot.Add(plotter.NewGrid())
 	err = plot.Save(4*vg.Inch, 4*vg.Inch, outputFilePath)
 
 	return err
@@ -42,6 +44,11 @@ func main() {
 	}
 
 	err = drawFunction(-5.0, 5.0, 0.1, common.Sigmoid, "sigmoid.png")
+	if err != nil {
+		fmt.Printf("failed plot graph: %e\n", err)
+	}
+
+	err = drawFunction(-5.0, 5.0, 0.1, common.Relu, "relu.png")
 	if err != nil {
 		fmt.Printf("failed plot graph: %e\n", err)
 	}

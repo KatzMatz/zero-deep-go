@@ -18,6 +18,10 @@ func Sigmoid(x float64) float64 {
 	return 1.0 / (1.0 + math.Exp(-x))
 }
 
+func Relu(x float64) float64 {
+	return math.Max(0, x)
+}
+
 func ApplyFunction(x mat.Matrix, f func(v float64) float64) mat.Matrix {
 	var y mat.Dense
 	y.Apply(func(_, _ int, v float64) float64 {
