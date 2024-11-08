@@ -2,6 +2,8 @@ package common
 
 import (
 	"math"
+
+	"gonum.org/v1/gonum/mat"
 )
 
 func StepFunction(x float64) float64 {
@@ -18,4 +20,20 @@ func Sigmoid(x float64) float64 {
 
 func Relu(x float64) float64 {
 	return math.Max(0, x)
+}
+
+func SoftMax(x mat.Matrix) mat.Matrix {
+	row, _ := x.Dims()
+	if row != 1 {
+		panic("input matrix must be a vector")
+	}
+
+	c := maxAtRow(x, 0)
+	a := SubConstant(x, c)
+	exps := ApplyFunction(a, math.Exp)
+	sumExps := SumRow(exps, 0)
+
+	result := DivConstant(exps, sumExps)
+
+	return result
 }
