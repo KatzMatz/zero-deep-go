@@ -20,3 +20,25 @@ func Add(a, b mat.Matrix) mat.Matrix {
 
 	return c
 }
+
+func ApplyFunction(x mat.Matrix, f func(v float64) float64) mat.Matrix {
+	var y mat.Dense
+	y.Apply(func(_, _ int, v float64) float64 {
+		return f(v)
+	}, x)
+	return &y
+}
+
+func ARange(start, stop, step float64) []float64 {
+	result := []float64{}
+	for v := start; v <= stop; v += step {
+		result = append(result, v)
+	}
+
+	return result
+}
+
+func ARangeVector(start, stop, step float64) mat.Matrix {
+	s := ARange(start, stop, step)
+	return mat.NewVecDense(len(s), s)
+}
