@@ -88,6 +88,21 @@ func maxAtRow(x mat.Matrix, row int) float64 {
 	return result
 }
 
+func Slice2Matrix(x [][]float64) mat.Matrix {
+
+	r := len(x)
+	c := len(x[0])
+
+	flatten := []float64{}
+
+	for _, row := range x {
+		flatten = append(flatten, row...)
+	}
+	matrix := mat.NewDense(r, c, flatten)
+
+	return matrix
+}
+
 func SumRow(x mat.Matrix, row int) float64 {
 	_, col := x.Dims()
 
@@ -97,4 +112,37 @@ func SumRow(x mat.Matrix, row int) float64 {
 	}
 
 	return sum
+}
+
+func ArgMaxAtRow(x mat.Matrix, row int) int {
+	_, col := x.Dims()
+
+	argMax := 0
+	maxValue := x.At(row, 0)
+	for idx := range col {
+		if x.At(row, idx) > maxValue {
+			maxValue = x.At(row, idx)
+			argMax = idx
+		}
+	}
+
+	return argMax
+}
+
+func ArgMax(x mat.Matrix) int {
+	row, col := x.Dims()
+
+	argMaxRow, argMaxCol := 0, 0
+	maxValue := x.At(0, 0)
+
+	for r := range row {
+		for c := range col {
+			if x.At(r, c) > maxValue {
+				maxValue = x.At(r, c)
+				argMaxRow, argMaxCol = r, c
+			}
+		}
+	}
+
+	return (argMaxRow * col) + argMaxCol
 }
