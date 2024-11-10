@@ -16,11 +16,38 @@ func Dot(a, b mat.Matrix) mat.Matrix {
 }
 
 func Add(a, b mat.Matrix) mat.Matrix {
-	row, col := a.Dims()
-	c := mat.NewDense(row, col, nil)
-	c.Add(a, b)
+	var m mat.Dense
+	m.Add(a, b)
 
-	return c
+	return &m
+}
+
+func AddBroadCast(m, vec mat.Matrix) mat.Matrix {
+
+	vector := GetRow(vec, 0)
+
+	row, col := m.Dims()
+	d := mat.NewDense(row, col, nil)
+	for idx := range row {
+		d.SetRow(idx, vector)
+	}
+
+	result := mat.NewDense(row, col, nil)
+	result.Add(m, d)
+
+	return result
+}
+
+func GetRow(m mat.Matrix, row int) []float64 {
+
+	vec := []float64{}
+
+	_, col := m.Dims()
+	for idx := range col {
+		vec = append(vec, m.At(row, idx))
+	}
+
+	return vec
 }
 
 func SubConstant(a mat.Matrix, v float64) mat.Matrix {
@@ -43,7 +70,7 @@ func DivConstant(x mat.Matrix, v float64) mat.Matrix {
 	return result
 }
 
-func RepeatSlice[T int | float32 | float64](v T, n int) []T {
+func RepeatSlice[T any](v T, n int) []T {
 	s := []T{}
 
 	for range n {
@@ -145,4 +172,21 @@ func ArgMax(x mat.Matrix) int {
 	}
 
 	return (argMaxRow * col) + argMaxCol
+}
+
+func ArgMaxEachRow(x mat.Matrix) []int {
+	row, col := x.Dims()
+
+	result := []int{}
+	for r := range row {
+		maxCol, maxValue := 0, x.At(r, 0)
+		for c := range col {
+			if x.At(r, c) > maxValue {
+				maxCol, maxValue = c, x.At(r, c)
+			}
+		}
+		result = append(result, maxCol)
+	}
+
+	return result
 }

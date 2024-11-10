@@ -223,3 +223,17 @@ func NormalizedImage2Matrix(image NormalizedImage) mat.Matrix {
 
 	return m
 }
+
+func NormalizedImage2BatchMatrix(images []NormalizedImage, batchSize int) mat.Matrix {
+	floats := []float64{}
+
+	for idx := range batchSize {
+		for _, v := range images[idx] {
+			floats = append(floats, float64(v))
+		}
+	}
+
+	m := mat.NewDense(batchSize, len(images[0]), floats)
+
+	return m
+}

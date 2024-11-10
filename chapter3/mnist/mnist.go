@@ -64,14 +64,14 @@ func predict(network map[string]mat.Matrix, x mat.Matrix) mat.Matrix {
 	b2 := network["b2"]
 	b3 := network["b3"]
 
-	a1 := common.Add(common.Dot(x, w1), b1)
+	a1 := common.AddBroadCast(common.Dot(x, w1), b1)
 	z1 := common.ApplyFunction(a1, common.Sigmoid)
 
-	a2 := common.Add(common.Dot(z1, w2), b2)
+	a2 := common.AddBroadCast(common.Dot(z1, w2), b2)
 	z2 := common.ApplyFunction(a2, common.Sigmoid)
 
-	a3 := common.Add(common.Dot(z2, w3), b3)
-	y := common.SoftMax(a3)
+	a3 := common.AddBroadCast(common.Dot(z2, w3), b3)
+	y := common.SoftMaxMatrix(a3)
 
 	return y
 }
@@ -92,12 +92,12 @@ func main() {
 	for idx := range dataset.NUM_TEST_IMAGES {
 		x := dataset.NormalizedImage2Matrix(normalizedMnist.TestImage[idx])
 		y := predict(network, x)
-		predict := common.ArgMax(y)
+		predict := common.ArgMaxEachRow(y)
 
 		// (Answer, Predict) =
-		fmt.Printf("(%d, %d), ", normalizedMnist.TestLabel[idx], predict)
+		fmt.Printf("(%d, %d), ", normalizedMnist.TestLabel[idx], predict[0])
 
-		if normalizedMnist.TestLabel[idx] == uint8(predict) {
+		if normalizedMnist.TestLabel[idx] == uint8(predict[0]) {
 			accuracy += 1.0
 		}
 
@@ -105,4 +105,34 @@ func main() {
 	fmt.Println("")
 
 	fmt.Println(accuracy / float64(dataset.NUM_TEST_IMAGES))
+
+	// predict by batch
+	batchSize := 100
+	countCorrect := 0
+	for idx := 0; idx < dataset.NUM_TEST_IMAGES; idx += batchSize {
+		xs := dataset.NormalizedImage2BatchMatrix(normalizedMnist.TestImage[idx:(idx+batchSize)], batchSize)
+		y := predict(network, xs)
+
+		predicts := common.ArgMaxEachRow(y)
+		countCorrect += CountBatchCorrectPredicts(predicts, normalizedMnist.TestLabel[idx:(idx+batchSize)], batchSize)
+	}
+
+	fmt.Println("Batch accuracy")
+	fmt.Printf("%f\n", float64(countCorrect)/float64(dataset.NUM_TEST_IMAGES))
+
+}
+
+func CountBatchCorrectPredicts(y []int, label []uint8, batchSize int) int {
+	if len(y) != len(label) {
+		panic("length is not correct")
+	}
+	count := 0
+
+	for idx := range batchSize {
+		if y[idx] == int(label[idx]) {
+			count += 1
+		}
+	}
+
+	return count
 }
