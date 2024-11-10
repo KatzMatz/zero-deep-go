@@ -41,6 +41,41 @@ func loadWeights(fileName string) (SampleWeight, error) {
 	return weights, nil
 }
 
+func initNetwork(weights SampleWeight) map[string]mat.Matrix {
+
+	network := map[string]mat.Matrix{}
+
+	network["w1"] = common.Slice2Matrix(weights.W1)
+	network["w2"] = common.Slice2Matrix(weights.W2)
+	network["w3"] = common.Slice2Matrix(weights.W3)
+	network["b1"] = mat.NewDense(1, len(weights.B1), weights.B1)
+	network["b2"] = mat.NewDense(1, len(weights.B2), weights.B2)
+	network["b3"] = mat.NewDense(1, len(weights.B3), weights.B3)
+
+	return network
+}
+
+func predict(network map[string]mat.Matrix, x mat.Matrix) mat.Matrix {
+
+	w1 := network["w1"]
+	w2 := network["w2"]
+	w3 := network["w3"]
+	b1 := network["b1"]
+	b2 := network["b2"]
+	b3 := network["b3"]
+
+	a1 := common.Add(common.Dot(x, w1), b1)
+	z1 := common.ApplyFunction(a1, common.Sigmoid)
+
+	a2 := common.Add(common.Dot(z1, w2), b2)
+	z2 := common.ApplyFunction(a2, common.Sigmoid)
+
+	a3 := common.Add(common.Dot(z2, w3), b3)
+	y := common.SoftMax(a3)
+
+	return y
+}
+
 func main() {
 
 	fileName := "sample_weight.json"
@@ -48,28 +83,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	network := initNetwork(weights)
 
-	w1 := common.Slice2Matrix(weights.W1)
-	w2 := common.Slice2Matrix(weights.W2)
-	w3 := common.Slice2Matrix(weights.W3)
-	b1 := mat.NewDense(1, len(weights.B1), weights.B1)
-	b2 := mat.NewDense(1, len(weights.B2), weights.B2)
-	b3 := mat.NewDense(1, len(weights.B3), weights.B3)
 	mnist, err := dataset.LoadMnist()
 	normalizedMnist := mnist.Normalize()
 	accuracy := 0.0
 
 	for idx := range dataset.NUM_TEST_IMAGES {
 		x := dataset.NormalizedImage2Matrix(normalizedMnist.TestImage[idx])
-
-		a1 := common.Add(common.Dot(x, w1), b1)
-		z1 := common.ApplyFunction(a1, common.Sigmoid)
-
-		a2 := common.Add(common.Dot(z1, w2), b2)
-		z2 := common.ApplyFunction(a2, common.Sigmoid)
-
-		a3 := common.Add(common.Dot(z2, w3), b3)
-		y := common.SoftMax(a3)
+		y := predict(network, x)
 		predict := common.ArgMax(y)
 
 		// (Answer, Predict) =
